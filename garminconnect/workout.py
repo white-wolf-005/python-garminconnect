@@ -143,9 +143,11 @@ class ExecutableStep(BaseModel):
     targetType: dict[str, Any] | None = None
     targetValueOne: float | None = None
     targetValueTwo: float | None = None
+    zoneNumber: int | None = None
     secondaryTargetType: dict[str, Any] | None = None
     secondaryTargetValueOne: float | None = None
     secondaryTargetValueTwo: float | None = None
+    secondaryZoneNumber: int | None = None
     strokeType: dict[str, Any] | None = None
     equipmentType: dict[str, Any] | None = None
     childStepId: int | None = None
@@ -309,8 +311,19 @@ class IntensityTarget(Protocol):
 
     target_type: ClassVar[int]
     target_type_key: ClassVar[str]
+    zone_number: ClassVar[Literal[None]] = None
     lower_limit: float
     upper_limit: float
+
+
+class ZonedIntensityTarget(Protocol):
+    """Protocol for power zone and heart rate zone targets."""
+
+    target_type: ClassVar[int]
+    target_type_key: ClassVar[str]
+    upper_limit: ClassVar[Literal[None]] = None
+    lower_limit: ClassVar[Literal[None]] = None
+    zone_number: int
 
 
 class CadenceTarget(BaseModel):
@@ -321,8 +334,19 @@ class CadenceTarget(BaseModel):
 
     target_type: ClassVar[int] = TargetType.CADENCE
     target_type_key: ClassVar[str] = "cadence"
+    zone_number: ClassVar = None
     lower_limit: float
     upper_limit: float
+
+
+class PowerZoneTarget(BaseModel):
+    """Power Zone target."""
+
+    target_type: ClassVar[int] = TargetType.POWER_ZONE
+    target_type_key: ClassVar[str] = "power.zone"
+    upper_limit: ClassVar = None
+    lower_limit: ClassVar = None
+    zone_number: int
 
 
 class CustomPowerTarget(BaseModel):
@@ -333,8 +357,19 @@ class CustomPowerTarget(BaseModel):
 
     target_type: ClassVar[int] = TargetType.POWER_ZONE
     target_type_key: ClassVar[str] = "power.zone"
+    zone_number: ClassVar = None
     lower_limit: float
     upper_limit: float
+
+
+class HeartRateZoneTarget(BaseModel):
+    """Heart Rate Zone target."""
+
+    target_type: ClassVar[int] = TargetType.HEART_RATE_ZONE
+    target_type_key: ClassVar[str] = "heart.rate.zone"
+    upper_limit: ClassVar = None
+    lower_limit: ClassVar = None
+    zone_number: int
 
 
 class CustomHeartRateTarget(BaseModel):
@@ -345,6 +380,7 @@ class CustomHeartRateTarget(BaseModel):
 
     target_type: ClassVar[int] = TargetType.HEART_RATE_ZONE
     target_type_key: ClassVar[str] = "heart.rate.zone"
+    zone_number: ClassVar = None
     lower_limit: float
     upper_limit: float
 
@@ -357,6 +393,7 @@ class SpeedTarget(BaseModel):
 
     target_type: ClassVar[int] = TargetType.SPEED_ZONE
     target_type_key: ClassVar[str] = "speed.zone"
+    zone_number: ClassVar = None
     lower_limit: float
     upper_limit: float
 
@@ -369,6 +406,7 @@ class PaceTarget(BaseModel):
 
     target_type: ClassVar[int] = TargetType.PACE_ZONE
     target_type_key: ClassVar[str] = "pace.zone"
+    zone_number: ClassVar = None
     lower_limit: float
     upper_limit: float
 
@@ -421,9 +459,11 @@ def create_interval_step(
     target_type: dict[str, Any] | None = None,
     target_value_one: float | None = None,
     target_value_two: float | None = None,
+    zone_number: int | None = None,
     secondary_target_type: dict[str, Any] | None = None,
     secondary_target_value_one: float | None = None,
     secondary_target_value_two: float | None = None,
+    secondary_zone_number: int | None = None,
 ) -> ExecutableStep:
     """Create an interval step."""
     return ExecutableStep(
@@ -448,6 +488,7 @@ def create_interval_step(
         },
         targetValueOne=target_value_one,
         targetValueTwo=target_value_two,
+        zoneNumber=zone_number,
         secondaryTargetType=secondary_target_type
         or {
             "workoutTargetTypeId": TargetType.NO_TARGET,
@@ -456,14 +497,15 @@ def create_interval_step(
         },
         secondaryTargetValueOne=secondary_target_value_one,
         secondaryTargetValueTwo=secondary_target_value_two,
+        secondaryZoneNumber=secondary_zone_number,
     )
 
 
 def create_targeted_interval_step(
     duration_seconds: float,
     step_order: int,
-    target: IntensityTarget,
-    secondary_target: IntensityTarget | None = None,
+    target: IntensityTarget | ZonedIntensityTarget,
+    secondary_target: IntensityTarget | ZonedIntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step."""
     return create_interval_step(
@@ -476,6 +518,7 @@ def create_targeted_interval_step(
         },
         target_value_one=target.lower_limit,
         target_value_two=target.upper_limit,
+        zone_number=target.zone_number,
         secondary_target_type={
             "workoutTargetTypeId": secondary_target.target_type,
             "workoutTargetTypeKey": secondary_target.target_type_key,
@@ -489,6 +532,9 @@ def create_targeted_interval_step(
         secondary_target_value_two=secondary_target.upper_limit
         if secondary_target
         else None,
+        secondary_zone_number=secondary_target.zone_number
+        if secondary_target
+        else None,
     )
 
 
@@ -498,9 +544,11 @@ def create_distance_interval_step(
     target_type: dict[str, Any] | None = None,
     target_value_one: float | None = None,
     target_value_two: float | None = None,
+    zone_number: int | None = None,
     secondary_target_type: dict[str, Any] | None = None,
     secondary_target_value_one: float | None = None,
     secondary_target_value_two: float | None = None,
+    secondary_zone_number: int | None = None,
 ) -> ExecutableStep:
     """Create an interval step that ends after a distance in meters."""
     return ExecutableStep(
@@ -525,6 +573,7 @@ def create_distance_interval_step(
         },
         targetValueOne=target_value_one,
         targetValueTwo=target_value_two,
+        zoneNumber=zone_number,
         secondaryTargetType=secondary_target_type
         or {
             "workoutTargetTypeId": TargetType.NO_TARGET,
@@ -533,14 +582,15 @@ def create_distance_interval_step(
         },
         secondaryTargetValueOne=secondary_target_value_one,
         secondaryTargetValueTwo=secondary_target_value_two,
+        secondaryZoneNumber=secondary_zone_number,
     )
 
 
 def create_targeted_distance_interval_step(
     distance_meters: float,
     step_order: int,
-    target: IntensityTarget,
-    secondary_target: IntensityTarget | None = None,
+    target: IntensityTarget | ZonedIntensityTarget,
+    secondary_target: IntensityTarget | ZonedIntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step that ends after a distance in meters."""
     return create_distance_interval_step(
@@ -553,6 +603,7 @@ def create_targeted_distance_interval_step(
         },
         target_value_one=target.lower_limit,
         target_value_two=target.upper_limit,
+        zone_number=target.zone_number,
         secondary_target_type={
             "workoutTargetTypeId": secondary_target.target_type,
             "workoutTargetTypeKey": secondary_target.target_type_key,
@@ -564,6 +615,9 @@ def create_targeted_distance_interval_step(
         if secondary_target
         else None,
         secondary_target_value_two=secondary_target.upper_limit
+        if secondary_target
+        else None,
+        secondary_zone_number=secondary_target.zone_number
         if secondary_target
         else None,
     )
