@@ -143,6 +143,9 @@ class ExecutableStep(BaseModel):
     targetType: dict[str, Any] | None = None
     targetValueOne: float | None = None
     targetValueTwo: float | None = None
+    secondaryTargetType: dict[str, Any] | None = None
+    secondaryTargetValueOne: float | None = None
+    secondaryTargetValueTwo: float | None = None
     strokeType: dict[str, Any] | None = None
     equipmentType: dict[str, Any] | None = None
     childStepId: int | None = None
@@ -418,6 +421,9 @@ def create_interval_step(
     target_type: dict[str, Any] | None = None,
     target_value_one: float | None = None,
     target_value_two: float | None = None,
+    secondary_target_type: dict[str, Any] | None = None,
+    secondary_target_value_one: float | None = None,
+    secondary_target_value_two: float | None = None,
 ) -> ExecutableStep:
     """Create an interval step."""
     return ExecutableStep(
@@ -425,7 +431,7 @@ def create_interval_step(
         stepType={
             "stepTypeId": StepType.INTERVAL,
             "stepTypeKey": "interval",
-            "displayOrder": 3,
+            "displayOrder": 1,
         },
         endCondition={
             "conditionTypeId": ConditionType.TIME,
@@ -438,10 +444,18 @@ def create_interval_step(
         or {
             "workoutTargetTypeId": TargetType.NO_TARGET,
             "workoutTargetTypeKey": "no.target",
-            "displayOrder": 1,
+            "displayOrder": 3,
         },
         targetValueOne=target_value_one,
         targetValueTwo=target_value_two,
+        secondaryTargetType=secondary_target_type
+        or {
+            "workoutTargetTypeId": TargetType.NO_TARGET,
+            "workoutTargetTypeKey": "no.target",
+            "displayOrder": 4,
+        },
+        secondaryTargetValueOne=secondary_target_value_one,
+        secondaryTargetValueTwo=secondary_target_value_two,
     )
 
 
@@ -449,6 +463,7 @@ def create_targeted_interval_step(
     duration_seconds: float,
     step_order: int,
     target: IntensityTarget,
+    secondary_target: IntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step."""
     return create_interval_step(
@@ -461,6 +476,19 @@ def create_targeted_interval_step(
         },
         target_value_one=target.lower_limit,
         target_value_two=target.upper_limit,
+        secondary_target_type={
+            "workoutTargetTypeId": secondary_target.target_type,
+            "workoutTargetTypeKey": secondary_target.target_type_key,
+            "displayOrder": 2,
+        }
+        if secondary_target
+        else None,
+        secondary_target_value_one=secondary_target.lower_limit
+        if secondary_target
+        else None,
+        secondary_target_value_two=secondary_target.upper_limit
+        if secondary_target
+        else None,
     )
 
 
@@ -470,6 +498,9 @@ def create_distance_interval_step(
     target_type: dict[str, Any] | None = None,
     target_value_one: float | None = None,
     target_value_two: float | None = None,
+    secondary_target_type: dict[str, Any] | None = None,
+    secondary_target_value_one: float | None = None,
+    secondary_target_value_two: float | None = None,
 ) -> ExecutableStep:
     """Create an interval step that ends after a distance in meters."""
     return ExecutableStep(
@@ -477,12 +508,12 @@ def create_distance_interval_step(
         stepType={
             "stepTypeId": StepType.INTERVAL,
             "stepTypeKey": "interval",
-            "displayOrder": 3,
+            "displayOrder": 1,
         },
         endCondition={
             "conditionTypeId": ConditionType.DISTANCE,
             "conditionTypeKey": "distance",
-            "displayOrder": 3,
+            "displayOrder": 2,
             "displayable": True,
         },
         endConditionValue=distance_meters,
@@ -490,15 +521,26 @@ def create_distance_interval_step(
         or {
             "workoutTargetTypeId": TargetType.NO_TARGET,
             "workoutTargetTypeKey": "no.target",
-            "displayOrder": 1,
+            "displayOrder": 3,
         },
         targetValueOne=target_value_one,
         targetValueTwo=target_value_two,
+        secondaryTargetType=secondary_target_type
+        or {
+            "workoutTargetTypeId": TargetType.NO_TARGET,
+            "workoutTargetTypeKey": "no.target",
+            "displayOrder": 4,
+        },
+        secondaryTargetValueOne=secondary_target_value_one,
+        secondaryTargetValueTwo=secondary_target_value_two,
     )
 
 
 def create_targeted_distance_interval_step(
-    distance_meters: float, step_order: int, target: IntensityTarget
+    distance_meters: float,
+    step_order: int,
+    target: IntensityTarget,
+    secondary_target: IntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step that ends after a distance in meters."""
     return create_distance_interval_step(
@@ -511,6 +553,19 @@ def create_targeted_distance_interval_step(
         },
         target_value_one=target.lower_limit,
         target_value_two=target.upper_limit,
+        secondary_target_type={
+            "workoutTargetTypeId": secondary_target.target_type,
+            "workoutTargetTypeKey": secondary_target.target_type_key,
+            "displayOrder": 2,
+        }
+        if secondary_target
+        else None,
+        secondary_target_value_one=secondary_target.lower_limit
+        if secondary_target
+        else None,
+        secondary_target_value_two=secondary_target.upper_limit
+        if secondary_target
+        else None,
     )
 
 
