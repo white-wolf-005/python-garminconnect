@@ -417,9 +417,9 @@ def pace_to_mps(minutes: int, seconds: int, units: Literal["km", "mi"]) -> float
     return to_meters / (minutes * 60 + seconds)
 
 
-def speed_to_mps(speed: float, units: Literal["mph", "kph"]) -> float:
-    """Convert a speed from mph or kph to m/s."""
-    to_meters = 1609.344 if units == "mi" else 1000
+def speed_to_mps(speed: float, units: Literal["kph", "mph"]) -> float:
+    """Convert a speed from kph or mph to m/s."""
+    to_meters = 1609.344 if units == "mph" else 1000
     return speed * to_meters / 3600
 
 
