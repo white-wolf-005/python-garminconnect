@@ -329,7 +329,7 @@ class ZonedIntensityTarget(Protocol):
 class CadenceTarget(BaseModel):
     """Cadence target.
 
-    upper and lower limits in steps per minute
+    upper and lower limits in steps (running) or revolutions (cycling) per minute
     """
 
     target_type: ClassVar[int] = TargetType.CADENCE
