@@ -8,17 +8,25 @@ or: pip install garminconnect[workout]
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, Self
 
 if TYPE_CHECKING:
-    from pydantic import BaseModel, ConfigDict, Field
+    from pydantic import BaseModel, ConfigDict, Field, model_validator
 else:
     try:
-        from pydantic import BaseModel, ConfigDict, Field
+        from pydantic import BaseModel, ConfigDict, Field, model_validator
     except ImportError:
         # Fallback if pydantic is not installed
         BaseModel = object  # type: ignore[assignment,misc]
         ConfigDict = dict  # type: ignore[assignment,misc]
+
+        def model_validator(*_args: Any, **_kwargs: Any) -> Any:
+            """No-op decorator for when pydantic is not installed."""
+
+            def decorator(function: Any) -> Any:
+                return function
+
+            return decorator
 
         def Field(*_args: Any, **_kwargs: Any) -> Any:  # type: ignore[misc]
             """Placeholder Field function when pydantic is not installed."""
@@ -326,7 +334,19 @@ class ZonedIntensityTarget(Protocol):
     zone_number: int
 
 
-class CadenceTarget(BaseModel):
+class _RangeTarget(BaseModel):
+    zone_number: ClassVar = None
+    lower_limit: float
+    upper_limit: float
+
+    @model_validator(mode="after")
+    def _check_order(self) -> Self:
+        if self.lower_limit > self.upper_limit:
+            raise ValueError("lower_limit must be <= upper_limit")
+        return self
+
+
+class CadenceTarget(_RangeTarget):
     """Cadence target.
 
     upper and lower limits in steps (running) or revolutions (cycling) per minute
@@ -349,7 +369,7 @@ class PowerZoneTarget(BaseModel):
     zone_number: int
 
 
-class CustomPowerTarget(BaseModel):
+class CustomPowerTarget(_RangeTarget):
     """Custom Power target.
 
     upper and lower limits in Watts
@@ -372,7 +392,7 @@ class HeartRateZoneTarget(BaseModel):
     zone_number: int
 
 
-class CustomHeartRateTarget(BaseModel):
+class CustomHeartRateTarget(_RangeTarget):
     """Custom Heart rate zone target.
 
     upper and lower limits in beats per minute
@@ -385,7 +405,7 @@ class CustomHeartRateTarget(BaseModel):
     upper_limit: float
 
 
-class SpeedTarget(BaseModel):
+class SpeedTarget(_RangeTarget):
     """Speed target.
 
     upper and lower limits in m/s
@@ -398,7 +418,7 @@ class SpeedTarget(BaseModel):
     upper_limit: float
 
 
-class PaceTarget(BaseModel):
+class PaceTarget(_RangeTarget):
     """Pace target.
 
     upper and lower limits in m/s
