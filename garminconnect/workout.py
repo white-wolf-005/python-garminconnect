@@ -521,6 +521,34 @@ def create_interval_step(
     )
 
 
+def _target_kwargs(
+    target: IntensityTarget | ZonedIntensityTarget,
+    secondary_target: IntensityTarget | ZonedIntensityTarget | None,
+) -> dict[str, Any]:
+    kwargs: dict[str, Any] = {
+        "target_type": {
+            "workoutTargetTypeId": target.target_type,
+            "workoutTargetTypeKey": target.target_type_key,
+            "displayOrder": 1,
+        },
+        "target_value_one": target.lower_limit,
+        "target_value_two": target.upper_limit,
+        "zone_number": target.zone_number,
+    }
+    if secondary_target is not None:
+        kwargs |= {
+            "secondary_target_type": {
+                "workoutTargetTypeId": secondary_target.target_type,
+                "workoutTargetTypeKey": secondary_target.target_type_key,
+                "displayOrder": 2,
+            },
+            "secondary_target_value_one": secondary_target.lower_limit,
+            "secondary_target_value_two": secondary_target.upper_limit,
+            "secondary_zone_number": secondary_target.zone_number,
+        }
+    return kwargs
+
+
 def create_targeted_interval_step(
     duration_seconds: float,
     step_order: int,
@@ -528,34 +556,13 @@ def create_targeted_interval_step(
     secondary_target: IntensityTarget | ZonedIntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step."""
-    return create_interval_step(
-        duration_seconds=duration_seconds,
-        step_order=step_order,
-        target_type={
-            "workoutTargetTypeId": target.target_type,
-            "workoutTargetTypeKey": target.target_type_key,
-            "displayOrder": 1,
-        },
-        target_value_one=target.lower_limit,
-        target_value_two=target.upper_limit,
-        zone_number=target.zone_number,
-        secondary_target_type={
-            "workoutTargetTypeId": secondary_target.target_type,
-            "workoutTargetTypeKey": secondary_target.target_type_key,
-            "displayOrder": 2,
-        }
-        if secondary_target
-        else None,
-        secondary_target_value_one=secondary_target.lower_limit
-        if secondary_target
-        else None,
-        secondary_target_value_two=secondary_target.upper_limit
-        if secondary_target
-        else None,
-        secondary_zone_number=secondary_target.zone_number
-        if secondary_target
-        else None,
-    )
+    kwargs = {
+        "duration_seconds": duration_seconds,
+        "step_order": step_order,
+    }
+    kwargs |= _target_kwargs(target, secondary_target)
+
+    return create_interval_step(**kwargs)  # type: ignore[arg-type]
 
 
 def create_distance_interval_step(
@@ -613,34 +620,13 @@ def create_targeted_distance_interval_step(
     secondary_target: IntensityTarget | ZonedIntensityTarget | None = None,
 ) -> ExecutableStep:
     """Create a targeted interval step that ends after a distance in meters."""
-    return create_distance_interval_step(
-        distance_meters=distance_meters,
-        step_order=step_order,
-        target_type={
-            "workoutTargetTypeId": target.target_type,
-            "workoutTargetTypeKey": target.target_type_key,
-            "displayOrder": 1,
-        },
-        target_value_one=target.lower_limit,
-        target_value_two=target.upper_limit,
-        zone_number=target.zone_number,
-        secondary_target_type={
-            "workoutTargetTypeId": secondary_target.target_type,
-            "workoutTargetTypeKey": secondary_target.target_type_key,
-            "displayOrder": 2,
-        }
-        if secondary_target
-        else None,
-        secondary_target_value_one=secondary_target.lower_limit
-        if secondary_target
-        else None,
-        secondary_target_value_two=secondary_target.upper_limit
-        if secondary_target
-        else None,
-        secondary_zone_number=secondary_target.zone_number
-        if secondary_target
-        else None,
-    )
+    kwargs = {
+        "distance_meters": distance_meters,
+        "step_order": step_order,
+    }
+    kwargs |= _target_kwargs(target, secondary_target)
+
+    return create_distance_interval_step(**kwargs)  # type: ignore[arg-type]
 
 
 def create_recovery_step(
