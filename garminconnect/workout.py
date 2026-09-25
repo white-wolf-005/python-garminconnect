@@ -588,7 +588,7 @@ def create_distance_interval_step(
         endCondition={
             "conditionTypeId": ConditionType.DISTANCE,
             "conditionTypeKey": "distance",
-            "displayOrder": 2,
+            "displayOrder": 3,
             "displayable": True,
         },
         endConditionValue=distance_meters,
